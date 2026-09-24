@@ -7,7 +7,7 @@ export enum Role {
 
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { logger } from '../Utils/logger.js';
+import { logger } from '../utils/logger.js';
 
 import {
   Login,
@@ -15,13 +15,13 @@ import {
   RefreshToken,
   inputuser,
   User,
-} from '../Schemas/index.js';
+} from '../schemas/index.js';
 
 import {
   AppError,
   NotFoundError,
   UnauthorizedError,
-} from '../Errors/Custom-errors.js';
+} from '../errors/Custom-errors.js';
 
 const prisma = new PrismaClient();
 
@@ -31,12 +31,12 @@ class UserService {
   async createUser(data: unknown) {
     const validData = inputuser.parse(data);
 
-    return await this.prisma.$transaction(async (prisma) => {
+    return await this.prisma.$transaction(async (tx) => {
       if (validData.password) {
         validData.password = await bcrypt.hash(validData.password, 13);
       }
 
-      const adminCount = await prisma.user.count({
+      const adminCount = await tx.user.count({
         where: { role: 'ADMIN' },
       });
 
@@ -48,15 +48,15 @@ class UserService {
         role: adminCount === 0 ? Role.ADMIN : Role.USER,
       };
 
-      return prisma.user.create({
+      return tx.user.create({
         data: userData,
       });
     });
   }
 
   async verifyEmail(token: string) {
-    return await this.prisma.$transaction(async (prisma) => {
-      const user = await prisma.user.findFirst({
+    return await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({
         where: { verifyToken: token },
       });
 
@@ -64,7 +64,7 @@ class UserService {
         throw new NotFoundError('Invalid or expired verification token');
       }
 
-      return prisma.user.update({
+      return tx.user.update({
         where: { id: user.id },
         data: { isVerified: true, verifyToken: null },
       });
@@ -73,7 +73,7 @@ class UserService {
 
   async login(data: Login) {
     const validData = loginSchema.parse(data);
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         email: validData.email,
       },
@@ -103,11 +103,11 @@ class UserService {
   }
 
   async findUserByGoogleId(googleId: string) {
-    return await prisma.user.findUnique({ where: { googleId } });
+    return await this.prisma.user.findUnique({ where: { googleId } });
   }
 
   async findUserById(id: string) {
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundError(`User not found`);
     }
@@ -115,7 +115,7 @@ class UserService {
   }
 
   async findUserByEmail(email: string) {
-    return await prisma.user.findUnique({ where: { email } });
+    return await this.prisma.user.findUnique({ where: { email } });
   }
 
   async updateUserInfo(data: Partial<User>, email: string) {
@@ -124,7 +124,7 @@ class UserService {
     if (data.password)
       updateData.password = await bcrypt.hash(data.password, 13);
 
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
 
@@ -132,7 +132,7 @@ class UserService {
       throw new NotFoundError('User not found');
     }
 
-    return await prisma.user.update({
+    return await this.prisma.user.update({
       where: { email },
       data: updateData,
     });
@@ -142,7 +142,7 @@ class UserService {
     const verifyToken = crypto.randomBytes(32).toString('hex');
 
     try {
-      await prisma.user.update({
+      await this.prisma.user.update({
         where: { email },
         data: {
           verifyToken,
@@ -162,7 +162,7 @@ class UserService {
 
   async clearResetToken(email: string): Promise<void> {
     try {
-      await prisma.user.update({
+      await this.prisma.user.update({
         where: { email },
         data: {
           verifyToken: null,

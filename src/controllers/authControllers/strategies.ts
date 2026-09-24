@@ -1,6 +1,7 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import userService from '../../Database/User-Service.js';
+import userService from '../../database/User-Service.js';
+import config from '../../config/nexus.config.js';
 
 passport.serializeUser((user: any, done) => {
   done(null, user.id);
@@ -19,34 +20,39 @@ passport.deserializeUser(async (id: string, done) => {
   }
 });
 
-passport.use(
-  new GoogleStrategy(
-    {
-      callbackURL: 'auth/google/redirect',
-      clientID: process.env.clientID!,
-      clientSecret: process.env.clientSecret!,
-      scope: ['profile', 'email'],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        const user = userService.findUserByGoogleId(profile.id);
+const clientID = process.env.GOOGLE_CLIENT_ID || config.oauth.google.clientId || 'google_client_id';
+const clientSecret = process.env.GOOGLE_CLIENT_SECRET || config.oauth.google.clientSecret || 'google_client_secret';
+const callbackURL = process.env.GOOGLE_CALLBACK_URL || config.oauth.google.callbackUrl;
 
-        if (!user) {
-          const newUser = await userService.createUser({
-            email: profile.emails?.[0]?.value ?? null,
-            password: null,
-            username: profile.displayName || profile.id,
-            firstName: profile.name?.givenName || null,
-            lastName: profile.name?.familyName || null,
-            googleId: profile.id,
-          });
-          return done(null, newUser);
+if (clientID && clientSecret) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        callbackURL,
+        clientID,
+        clientSecret,
+        scope: ['profile', 'email'],
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          let user = await userService.findUserByGoogleId(profile.id);
+
+          if (!user) {
+            user = await userService.createUser({
+              email: profile.emails?.[0]?.value ?? `${profile.id}@google.com`,
+              password: null,
+              username: profile.displayName || profile.id,
+              firstName: profile.name?.givenName || 'User',
+              lastName: profile.name?.familyName || 'Google',
+              googleId: profile.id,
+            });
+          }
+
+          return done(null, user);
+        } catch (error) {
+          return done(error as Error);
         }
-
-        return done(null, user);
-      } catch (error) {
-        return done(error as Error);
       }
-    }
-  )
-);
+    )
+  );
+}
