@@ -10,8 +10,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || config.stripe.secretK
   apiVersion: '2025-03-31.basil' as any,
 });
 
-const getPublishableKey = (req: Request, res: Response) => {
-  return ApiResponse.success({
+const getPublishableKey = (req: Request, res: Response): void => {
+  ApiResponse.success({
     res,
     data: {
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
@@ -20,11 +20,12 @@ const getPublishableKey = (req: Request, res: Response) => {
   });
 };
 
-const createCheckoutSession = async (req: Request, res: Response) => {
+const createCheckoutSession = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = req.user as User;
     if (!user) {
-      return ApiResponse.error({ res, statusCode: 401, message: 'Unauthorized' });
+      ApiResponse.error({ res, statusCode: 401, message: 'Unauthorized' });
+      return;
     }
 
     const { orderId } = req.body;
@@ -38,11 +39,12 @@ const createCheckoutSession = async (req: Request, res: Response) => {
     }
 
     if (!targetOrder) {
-      return ApiResponse.error({
+      ApiResponse.error({
         res,
         statusCode: 404,
         message: 'No pending order found for checkout. Please create an order first.',
       });
+      return;
     }
 
     const lineItems = targetOrder.items && targetOrder.items.length > 0
@@ -84,7 +86,7 @@ const createCheckoutSession = async (req: Request, res: Response) => {
       },
     });
 
-    return ApiResponse.success({
+    ApiResponse.success({
       res,
       message: 'Stripe checkout session initialized',
       data: {
@@ -95,7 +97,7 @@ const createCheckoutSession = async (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Stripe checkout session error:', error);
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 500,
       message: error instanceof Error ? error.message : 'Checkout session creation failed',
@@ -104,7 +106,7 @@ const createCheckoutSession = async (req: Request, res: Response) => {
   }
 };
 
-const handleWebhook = async (req: Request, res: Response) => {
+const handleWebhook = async (req: Request, res: Response): Promise<void> => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || config.stripe.webhookSecret;
   let event: Stripe.Event;

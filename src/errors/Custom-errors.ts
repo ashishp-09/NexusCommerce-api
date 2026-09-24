@@ -19,6 +19,12 @@ export class ValidationError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message: string) {
+    super(message, 400, 'BAD_REQUEST');
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(message: string) {
     super(message, 404, 'NOT_FOUND');

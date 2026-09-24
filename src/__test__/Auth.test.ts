@@ -1,7 +1,7 @@
 import app from '../app.js';
 import request from 'supertest';
 import * as cookie from 'cookie';
-import redisClient from '../Utils/Get-Redis-Client.js';
+import redisClient from '../utils/Get-Redis-Client.js';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();

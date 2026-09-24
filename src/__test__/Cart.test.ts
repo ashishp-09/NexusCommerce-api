@@ -3,7 +3,7 @@ import request from 'supertest';
 import { Response } from 'supertest';
 import * as bcrypt from 'bcrypt';
 import * as cookie from 'cookie';
-import redisClient from '../Utils/Get-Redis-Client.js';
+import redisClient from '../utils/Get-Redis-Client.js';
 import { PrismaClient, Product } from '@prisma/client';
 
 const prisma = new PrismaClient();

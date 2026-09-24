@@ -15,7 +15,7 @@ import redisClient from '../../utils/Get-Redis-Client.js';
 import { ApiResponse } from '../../utils/api-response.js';
 import config from '../../config/nexus.config.js';
 
-const register = async (req: Request, res: Response) => {
+const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await userService.createUser(req.body);
 
@@ -46,7 +46,7 @@ const register = async (req: Request, res: Response) => {
       `
     ).catch(() => {});
 
-    return ApiResponse.created({
+    ApiResponse.created({
       res,
       message: 'User registered successfully. Please verify your email.',
       data: {
@@ -60,7 +60,7 @@ const register = async (req: Request, res: Response) => {
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : 'Registration failed';
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 400,
       message: errorMessage,
@@ -98,14 +98,15 @@ const verifyEmail = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const login = async (req: Request, res: Response) => {
+const login = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.body.email || !req.body.password) {
-      return ApiResponse.error({
+      ApiResponse.error({
         res,
         statusCode: 400,
         message: 'Email and password are required',
       });
+      return;
     }
 
     const user = await userService.login(req.body);
@@ -118,7 +119,7 @@ const login = async (req: Request, res: Response) => {
     const tokens = await attachCookiesToResponse(res, sanitizedUser);
 
     if (user.secondEmail) {
-      return ApiResponse.success({
+      ApiResponse.success({
         res,
         message: '2FA authentication code required',
         data: {
@@ -128,9 +129,10 @@ const login = async (req: Request, res: Response) => {
           requiresSecondFactor: true,
         },
       });
+      return;
     }
 
-    return ApiResponse.success({
+    ApiResponse.success({
       res,
       message: 'Login successful',
       data: {
@@ -143,7 +145,7 @@ const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 401,
       message: error instanceof Error ? error.message : 'Invalid credentials',
@@ -177,9 +179,10 @@ const loginWithGoogle = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const logout = async (req: Request, res: Response) => {
+const logout = async (req: Request, res: Response): Promise<void> => {
   if (!req.user) {
-    return ApiResponse.error({ res, statusCode: 401, message: 'Authentication required' });
+    ApiResponse.error({ res, statusCode: 401, message: 'Authentication required' });
+    return;
   }
 
   const user = req.user as User;
@@ -205,7 +208,7 @@ const logout = async (req: Request, res: Response) => {
   res.cookie('refreshToken', 'logout', { httpOnly: true, maxAge: 1 });
   res.cookie('XSRF-TOKEN', 'logout', { httpOnly: false, maxAge: 1 });
 
-  return ApiResponse.success({ res, message: 'Logout successful' });
+  ApiResponse.success({ res, message: 'Logout successful' });
 };
 
 const forgotPassword = async (req: Request, res: Response): Promise<void> => {

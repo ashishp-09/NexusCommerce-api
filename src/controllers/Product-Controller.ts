@@ -20,7 +20,7 @@ const upload = multer({
 
 const addNewProducts = [
   upload.single('image'),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const imagePath = req.file ? req.file.path : (req.body.imageUrl || '');
 
@@ -29,28 +29,28 @@ const addNewProducts = [
         imagePath
       );
 
-      return ApiResponse.created({
+      ApiResponse.created({
         res,
         message: `Product "${product.name}" created successfully`,
         data: product,
       });
     } catch (error) {
       if (error instanceof Error && error.name === 'ZodError') {
-        return ApiResponse.error({
+        ApiResponse.error({
           res,
           statusCode: 400,
           message: 'Invalid product payload',
           error,
         });
       } else if (error instanceof Error && error.name === 'ConflictError') {
-        return ApiResponse.error({
+        ApiResponse.error({
           res,
           statusCode: 409,
           message: error.message,
           error,
         });
       } else {
-        return ApiResponse.error({
+        ApiResponse.error({
           res,
           statusCode: 500,
           message: 'Server error while creating product',
@@ -61,17 +61,18 @@ const addNewProducts = [
   },
 ];
 
-const getProductById = async (req: Request, res: Response) => {
+const getProductById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     if (!id) {
-      return ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      return;
     }
 
     const product = await productsService.getProductById(id);
-    return ApiResponse.success({ res, data: product });
+    ApiResponse.success({ res, data: product });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 404,
       message: error instanceof Error ? error.message : 'Product not found',
@@ -80,22 +81,23 @@ const getProductById = async (req: Request, res: Response) => {
   }
 };
 
-const deleteProduct = async (req: Request, res: Response) => {
+const deleteProduct = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      return ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      return;
     }
 
     await productsService.deleteProduct(id);
-    return ApiResponse.success({
+    ApiResponse.success({
       res,
       message: 'Product deleted successfully',
       data: { id },
     });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 400,
       message: error instanceof Error ? error.message : 'Failed to delete product',
@@ -104,22 +106,23 @@ const deleteProduct = async (req: Request, res: Response) => {
   }
 };
 
-const updateProduct = async (req: Request, res: Response) => {
+const updateProduct = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      return ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      return;
     }
 
     const updatedProduct = await productsService.updateProduct(id, req.body);
-    return ApiResponse.success({
+    ApiResponse.success({
       res,
       message: `Product "${updatedProduct.name}" updated successfully`,
       data: updatedProduct,
     });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 400,
       message: error instanceof Error ? error.message : 'Failed to update product',
@@ -202,7 +205,7 @@ const searchInProducts = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const getFeatured = async (req: Request, res: Response) => {
+const getFeatured = async (req: Request, res: Response): Promise<void> => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 8;
     const featured = await productsService.getFeaturedProducts(limit);
@@ -222,22 +225,23 @@ const getFeatured = async (req: Request, res: Response) => {
   }
 };
 
-const hideProduct = async (req: Request, res: Response) => {
+const hideProduct = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      return ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      return;
     }
 
     const result = await productsService.hideProduct(id);
-    return ApiResponse.success({
+    ApiResponse.success({
       res,
       message: `Product "${result.name}" hidden successfully`,
       data: result,
     });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 400,
       message: error instanceof Error ? error.message : 'Failed to hide product',
@@ -246,22 +250,23 @@ const hideProduct = async (req: Request, res: Response) => {
   }
 };
 
-const restoreProduct = async (req: Request, res: Response) => {
+const restoreProduct = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      return ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      ApiResponse.error({ res, statusCode: 400, message: 'Product ID is required' });
+      return;
     }
 
     const result = await productsService.restoreProduct(id);
-    return ApiResponse.success({
+    ApiResponse.success({
       res,
       message: `Product "${result.name}" restored successfully`,
       data: result,
     });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 400,
       message: error instanceof Error ? error.message : 'Failed to restore product',
@@ -270,12 +275,12 @@ const restoreProduct = async (req: Request, res: Response) => {
   }
 };
 
-const getHidden = async (req: Request, res: Response) => {
+const getHidden = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await productsService.getHidden();
-    return ApiResponse.success({ res, data: result });
+    ApiResponse.success({ res, data: result });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 400,
       message: error instanceof Error ? error.message : 'Failed to get hidden products',
@@ -284,12 +289,12 @@ const getHidden = async (req: Request, res: Response) => {
   }
 };
 
-const getCategories = async (req: Request, res: Response) => {
+const getCategories = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await productsService.getCategories();
-    return ApiResponse.success({ res, data: result });
+    ApiResponse.success({ res, data: result });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 400,
       message: error instanceof Error ? error.message : 'Failed to get categories',
@@ -298,12 +303,12 @@ const getCategories = async (req: Request, res: Response) => {
   }
 };
 
-const getTags = async (req: Request, res: Response) => {
+const getTags = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await productsService.getAllTags();
-    return ApiResponse.success({ res, data: result });
+    ApiResponse.success({ res, data: result });
   } catch (error) {
-    return ApiResponse.error({
+    ApiResponse.error({
       res,
       statusCode: 400,
       message: error instanceof Error ? error.message : 'Failed to get tags',
