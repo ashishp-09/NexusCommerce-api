@@ -1,0 +1,222 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "NexusCommerce REST API",
+    "description": "High-performance, modular enterprise e-commerce backend built with TypeScript, Express, Prisma ORM, Redis caching, and Stripe payments.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "NexusCommerce Engineering Team",
+      "url": "https://nexuscommerce.io"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "https://api.nexuscommerce.io/api/v1",
+      "description": "Production Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Service Health Check",
+        "description": "Returns uptime, operational status, and server metadata",
+        "responses": {
+          "200": {
+            "description": "Server is healthy and operational"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register New User",
+        "description": "Creates a new customer account and sends email verification code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "email", "password", "firstName", "lastName"],
+                "properties": {
+                  "username": { "type": "string", "example": "johndoe" },
+                  "email": { "type": "string", "format": "email", "example": "john@example.com" },
+                  "password": { "type": "string", "example": "SuperSecret123!" },
+                  "firstName": { "type": "string", "example": "John" },
+                  "lastName": { "type": "string", "example": "Doe" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created successfully" },
+          "400": { "description": "Validation error or user already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "User Login",
+        "description": "Authenticates user credentials and issues JWT cookies/tokens",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "john@example.com" },
+                  "password": { "type": "string", "example": "SuperSecret123!" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Authentication successful" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/product": {
+      "get": {
+        "summary": "Get Paginated Product Catalog",
+        "description": "Fetches products with multi-facet filtering, sorting, and Redis caching",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "Products retrieved successfully" }
+        }
+      }
+    },
+    "/product/featured": {
+      "get": {
+        "summary": "Get Featured Products",
+        "description": "Returns top-rated in-stock products for storefront display",
+        "responses": {
+          "200": { "description": "Featured products list" }
+        }
+      }
+    },
+    "/product/search": {
+      "get": {
+        "summary": "Search Products",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Search results" }
+        }
+      }
+    },
+    "/cart": {
+      "get": {
+        "summary": "Get User Cart",
+        "responses": {
+          "200": { "description": "Current cart with item totals and subtotal" }
+        }
+      },
+      "post": {
+        "summary": "Add Item to Cart",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["productId", "quantity", "price"],
+                "properties": {
+                  "productId": { "type": "string" },
+                  "quantity": { "type": "integer", "default": 1 },
+                  "price": { "type": "number", "example": 29.99 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Item added to cart" }
+        }
+      }
+    },
+    "/coupons": {
+      "get": {
+        "summary": "List Available Coupons & Promotions",
+        "responses": {
+          "200": { "description": "Active promotional coupons" }
+        }
+      }
+    },
+    "/coupons/apply": {
+      "post": {
+        "summary": "Apply Promo Code to Cart",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                  "code": { "type": "string", "example": "NEXUS20" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Coupon applied and discount calculated" }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "Create Order from Cart",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shippingAddress": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Order created" }
+        }
+      }
+    },
+    "/payment/checkout": {
+      "post": {
+        "summary": "Create Stripe Checkout Session",
+        "responses": {
+          "200": { "description": "Stripe checkout URL and session ID" }
+        }
+      }
+    },
+    "/orders/analytics/summary": {
+      "get": {
+        "summary": "Admin Sales Analytics",
+        "responses": {
+          "200": { "description": "Total revenue, order counts, and AOV" }
+        }
+      }
+    }
+  }
+}
