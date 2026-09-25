@@ -16,6 +16,8 @@ import { cartRouter } from './routes/Cart.js';
 import { orderRouter } from './routes/Order.js';
 import { paymentRouter } from './routes/payment.js';
 import { couponRouter } from './routes/Coupon.js';
+import { wishlistRouter } from './routes/Wishlist.js';
+import { healthRouter } from './routes/Health.js';
 import { authMiddleware } from './middleware/Auth-Middleware.js';
 import { validateCSRF } from './middleware/CSRF.validation.js';
 import errorHandler from './middleware/Error-handler.js';
@@ -52,16 +54,9 @@ app.use(express.json({ limit: '10kb' }));
 app.use(cookieParser());
 app.use(rateLimiting);
 
-// Health check endpoint
-app.get(['/healthz', '/api/v1/health'], (req, res) => {
-  res.status(200).json({
-    status: 'online',
-    service: 'NexusCommerce API',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    uptime: `${Math.floor(process.uptime())}s`,
-  });
-});
+// Health check endpoints
+app.use('/healthz', healthRouter);
+app.use('/api/v1/health', healthRouter);
 
 // API Routes
 app.use('/auth', authRouter);
@@ -71,6 +66,7 @@ app.use('/cart', authMiddleware, validateCSRF, cartRouter);
 app.use('/orders', authMiddleware, validateCSRF, orderRouter);
 app.use('/payment', paymentRouter);
 app.use('/coupons', couponRouter);
+app.use('/wishlist', wishlistRouter);
 
 // Versioned API v1 Aliases
 app.use('/api/v1/auth', authRouter);
@@ -80,6 +76,7 @@ app.use('/api/v1/cart', authMiddleware, validateCSRF, cartRouter);
 app.use('/api/v1/orders', authMiddleware, validateCSRF, orderRouter);
 app.use('/api/v1/payment', paymentRouter);
 app.use('/api/v1/coupons', couponRouter);
+app.use('/api/v1/wishlist', wishlistRouter);
 
 // 404 Handler
 app.use((req, res) => {
