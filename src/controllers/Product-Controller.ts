@@ -205,6 +205,50 @@ const searchInProducts = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const getSearchSuggestions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const query = (req.query.q as string) || '';
+    if (!query) {
+      ApiResponse.success({ res, data: [] });
+      return;
+    }
+
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 5;
+    const suggestions = await productsService.getSearchSuggestions(query, limit);
+
+    ApiResponse.success({
+      res,
+      message: 'Search suggestions retrieved',
+      data: suggestions,
+    });
+  } catch (error) {
+    ApiResponse.error({
+      res,
+      statusCode: 500,
+      message: 'Failed to retrieve search suggestions',
+      error,
+    });
+  }
+};
+
+const getFacets = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const facets = await productsService.getCatalogFacets();
+    ApiResponse.success({
+      res,
+      message: 'Catalog facets retrieved',
+      data: facets,
+    });
+  } catch (error) {
+    ApiResponse.error({
+      res,
+      statusCode: 500,
+      message: 'Failed to retrieve catalog facets',
+      error,
+    });
+  }
+};
+
 const getFeatured = async (req: Request, res: Response): Promise<void> => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 8;
@@ -324,6 +368,8 @@ export {
   updateProduct,
   getPage,
   searchInProducts,
+  getSearchSuggestions,
+  getFacets,
   getFeatured,
   hideProduct,
   restoreProduct,

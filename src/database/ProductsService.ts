@@ -232,6 +232,59 @@ class ProductsService {
     }, 600);
   }
 
+  async getSearchSuggestions(query: string, limit: number = 5) {
+    const key = `products:suggestions:${query}:${limit}`;
+    return redisService.getOrSetCache(key, async () => {
+      const matches = await this.prisma.product.findMany({
+        where: {
+          isDeleted: false,
+          name: { contains: query, mode: 'insensitive' },
+        },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          category: true,
+          imageUrl: true,
+        },
+        take: limit,
+      });
+
+      return matches;
+    }, 300);
+  }
+
+  async getCatalogFacets() {
+    const key = 'products:catalog:facets';
+    return redisService.getOrSetCache(key, async () => {
+      const [categories, priceAgg] = await Promise.all([
+        this.prisma.product.groupBy({
+          by: ['category'],
+          where: { isDeleted: false },
+          _count: { id: true },
+        }),
+        this.prisma.product.aggregate({
+          where: { isDeleted: false },
+          _min: { price: true },
+          _max: { price: true },
+          _avg: { price: true },
+        }),
+      ]);
+
+      return {
+        categories: categories.map((c) => ({
+          name: c.category,
+          count: c._count.id,
+        })),
+        priceRange: {
+          min: priceAgg._min.price ? Number(priceAgg._min.price) : 0,
+          max: priceAgg._max.price ? Number(priceAgg._max.price) : 0,
+          avg: priceAgg._avg.price ? Number(priceAgg._avg.price) : 0,
+        },
+      };
+    }, 1800);
+  }
+
   async getFeaturedProducts(limit: number = 8) {
     const key = `products:featured:${limit}`;
     return redisService.getOrSetCache(key, async () => {

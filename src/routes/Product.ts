@@ -12,6 +12,8 @@ import {
   updateProduct,
   getPage,
   searchInProducts,
+  getSearchSuggestions,
+  getFacets,
   getFeatured,
   hideProduct,
   restoreProduct,
@@ -25,6 +27,8 @@ productRouter.get('/', getPage);
 productRouter.get('/page/:page', getPage);
 productRouter.get('/search', searchInProducts);
 productRouter.post('/search', searchInProducts);
+productRouter.get('/search/suggestions', getSearchSuggestions);
+productRouter.get('/facets', getFacets);
 productRouter.get('/featured', getFeatured);
 productRouter.get('/categories', getCategories);
 productRouter.get('/tags', getTags);
