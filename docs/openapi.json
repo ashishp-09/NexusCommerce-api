@@ -3,7 +3,7 @@
   "info": {
     "title": "NexusCommerce REST API",
     "description": "High-performance, modular enterprise e-commerce backend built with TypeScript, Express, Prisma ORM, Redis caching, and Stripe payments.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "contact": {
       "name": "NexusCommerce Engineering Team",
       "url": "https://nexuscommerce.io"
@@ -29,9 +29,16 @@
         "summary": "Service Health Check",
         "description": "Returns uptime, operational status, and server metadata",
         "responses": {
-          "200": {
-            "description": "Server is healthy and operational"
-          }
+          "200": { "description": "Server is healthy and operational" }
+        }
+      }
+    },
+    "/health/detailed": {
+      "get": {
+        "summary": "Detailed System Diagnostics",
+        "description": "Returns database latency, Redis health, and memory metrics",
+        "responses": {
+          "200": { "description": "Diagnostic telemetry metrics" }
         }
       }
     },
@@ -101,23 +108,30 @@
         }
       }
     },
-    "/product/featured": {
+    "/product/search/suggestions": {
       "get": {
-        "summary": "Get Featured Products",
-        "description": "Returns top-rated in-stock products for storefront display",
-        "responses": {
-          "200": { "description": "Featured products list" }
-        }
-      }
-    },
-    "/product/search": {
-      "get": {
-        "summary": "Search Products",
+        "summary": "Search Autocomplete Suggestions",
         "parameters": [
           { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": { "description": "Search results" }
+          "200": { "description": "Typeahead suggestions list" }
+        }
+      }
+    },
+    "/product/facets": {
+      "get": {
+        "summary": "Catalog Facet Aggregations",
+        "responses": {
+          "200": { "description": "Category item counts and price boundaries" }
+        }
+      }
+    },
+    "/product/featured": {
+      "get": {
+        "summary": "Get Featured Products",
+        "responses": {
+          "200": { "description": "Featured products list" }
         }
       }
     },
@@ -130,24 +144,47 @@
       },
       "post": {
         "summary": "Add Item to Cart",
+        "responses": {
+          "200": { "description": "Item added to cart" }
+        }
+      }
+    },
+    "/wishlist": {
+      "get": {
+        "summary": "Get Customer Wishlist",
+        "responses": {
+          "200": { "description": "User saved wishlist items" }
+        }
+      },
+      "post": {
+        "summary": "Add Product to Wishlist",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["productId", "quantity", "price"],
+                "required": ["productId"],
                 "properties": {
-                  "productId": { "type": "string" },
-                  "quantity": { "type": "integer", "default": 1 },
-                  "price": { "type": "number", "example": 29.99 }
+                  "productId": { "type": "string" }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Item added to cart" }
+          "201": { "description": "Product added to wishlist" }
+        }
+      }
+    },
+    "/wishlist/{productId}/move-to-cart": {
+      "post": {
+        "summary": "Move Wishlist Item to Shopping Cart",
+        "parameters": [
+          { "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Item moved to cart" }
         }
       }
     },
@@ -162,20 +199,6 @@
     "/coupons/apply": {
       "post": {
         "summary": "Apply Promo Code to Cart",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["code"],
-                "properties": {
-                  "code": { "type": "string", "example": "NEXUS20" }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": { "description": "Coupon applied and discount calculated" }
         }
@@ -184,19 +207,6 @@
     "/orders": {
       "post": {
         "summary": "Create Order from Cart",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "shippingAddress": { "type": "object" }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "201": { "description": "Order created" }
         }
@@ -207,14 +217,6 @@
         "summary": "Create Stripe Checkout Session",
         "responses": {
           "200": { "description": "Stripe checkout URL and session ID" }
-        }
-      }
-    },
-    "/orders/analytics/summary": {
-      "get": {
-        "summary": "Admin Sales Analytics",
-        "responses": {
-          "200": { "description": "Total revenue, order counts, and AOV" }
         }
       }
     }

@@ -43,8 +43,13 @@
 * **📦 Catalog & Inventory**
   * Multi-tier product filtering (price min/max, categories, tags, rating, stock status).
   * Fast full-text search with Redis query caching and automated cache invalidation.
+  * Instant search suggestions & facet aggregation endpoints.
   * Soft delete / hide product visibility controls.
   * Automatic inventory deduction and stock replenishment on cancellation.
+
+* **💖 Customer Wishlist**
+  * Dedicated customer wishlist management.
+  * Seamless one-click migration from wishlist to active shopping cart.
 
 * **🏷️ Coupons & Promotions Engine**
   * Percentage-based & flat discount coupon validation.
@@ -60,8 +65,9 @@
   * Stripe Checkout Session creation with itemized product lines and metadata.
   * Webhook listener (`/payment/webhook`) with cryptographic signature validation.
 
-* **📊 Business Intelligence & Admin Analytics**
-  * Real-time metrics: Total revenue, completed orders count, Average Order Value (AOV), top products.
+* **📊 Business Intelligence & Health Diagnostics**
+  * Admin sales analytics: Total revenue, completed orders count, Average Order Value (AOV), top products.
+  * Real-time system telemetry: Database & Redis latency checks, memory RSS/heap tracking.
 
 ---
 
@@ -100,6 +106,7 @@ ecommerce-express-api/
 │   │   ├── Cart-Controller.ts
 │   │   ├── Order-Controller.ts
 │   │   ├── Coupon-Controller.ts
+│   │   ├── Wishlist-Controller.ts
 │   │   └── Payments-Controller.ts
 │   ├── database/              # Business logic & Prisma data access
 │   ├── errors/                # Standardized custom error classes
@@ -157,6 +164,7 @@ The server will start at `http://localhost:3000` with health check at `http://lo
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/healthz` | System uptime & health status | Public |
+| `GET` | `/api/v1/health/detailed` | Database & Redis latency diagnostics | Public |
 | `POST` | `/api/v1/auth/register` | Register customer account | Public |
 | `POST` | `/api/v1/auth/login` | Authenticate & issue tokens | Public |
 | `POST` | `/api/v1/auth/logout` | Revoke session & clear cookies | Auth |
@@ -164,12 +172,17 @@ The server will start at `http://localhost:3000` with health check at `http://lo
 | `GET` | `/api/v1/product` | Paginated product listings | Public |
 | `GET` | `/api/v1/product/featured` | Top-rated featured products | Public |
 | `GET` | `/api/v1/product/search?q=`| Search product catalog | Public |
+| `GET` | `/api/v1/product/search/suggestions?q=`| Autocomplete suggestions | Public |
+| `GET` | `/api/v1/product/facets` | Category counts & price boundaries | Public |
 | `POST` | `/api/v1/product` | Create product listing | Admin |
 | `PATCH`| `/api/v1/product/:id` | Update product details | Admin |
 | `DELETE`| `/api/v1/product/:id`| Remove product listing | Admin |
 | `GET` | `/api/v1/cart` | View active cart | Auth |
 | `POST` | `/api/v1/cart` | Add item / update quantity | Auth |
 | `DELETE`| `/api/v1/cart/:id` | Remove item from cart | Auth |
+| `GET` | `/api/v1/wishlist` | View saved wishlist items | Auth |
+| `POST` | `/api/v1/wishlist` | Save product to wishlist | Auth |
+| `POST` | `/api/v1/wishlist/:id/move-to-cart` | Transfer wishlist item to cart | Auth |
 | `GET` | `/api/v1/coupons` | List promo codes & discounts | Public |
 | `POST` | `/api/v1/coupons/apply` | Apply coupon code to cart | Auth |
 | `POST` | `/api/v1/orders` | Place new order from cart | Auth |
@@ -191,6 +204,9 @@ npm run test:coverage
 
 # TypeScript compile validation
 npm run lint
+
+# Production build bundle
+npm run build
 ```
 
 ---
