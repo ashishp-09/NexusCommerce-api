@@ -17,6 +17,8 @@ import { orderRouter } from './routes/Order.js';
 import { paymentRouter } from './routes/payment.js';
 import { couponRouter } from './routes/Coupon.js';
 import { wishlistRouter } from './routes/Wishlist.js';
+import { addressRouter } from './routes/Address.js';
+import { inventoryRouter } from './routes/Inventory.js';
 import { healthRouter } from './routes/Health.js';
 import { authMiddleware } from './middleware/Auth-Middleware.js';
 import { validateCSRF } from './middleware/CSRF.validation.js';
@@ -67,6 +69,8 @@ app.use('/orders', authMiddleware, validateCSRF, orderRouter);
 app.use('/payment', paymentRouter);
 app.use('/coupons', couponRouter);
 app.use('/wishlist', wishlistRouter);
+app.use('/address', addressRouter);
+app.use('/inventory', inventoryRouter);
 
 // Versioned API v1 Aliases
 app.use('/api/v1/auth', authRouter);
@@ -77,6 +81,8 @@ app.use('/api/v1/orders', authMiddleware, validateCSRF, orderRouter);
 app.use('/api/v1/payment', paymentRouter);
 app.use('/api/v1/coupons', couponRouter);
 app.use('/api/v1/wishlist', wishlistRouter);
+app.use('/api/v1/address', addressRouter);
+app.use('/api/v1/inventory', inventoryRouter);
 
 // 404 Handler
 app.use((req, res) => {
