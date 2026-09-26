@@ -2,6 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status" />
+  <img src="https://img.shields.io/badge/CI-GitHub_Actions-2088FF.svg" alt="CI" />
   <img src="https://img.shields.io/badge/Node.js-v18%2B-green.svg" alt="Node" />
   <img src="https://img.shields.io/badge/TypeScript-5.8-blue.svg" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Express-4.21-lightgrey.svg" alt="Express" />
@@ -40,16 +41,17 @@
   * Google OAuth2.0 authentication integration.
   * 2FA (Two-Factor Authentication) via email OTP verification.
 
-* **📦 Catalog & Inventory**
+* **📦 Catalog, Inventory & Restock Alerts**
   * Multi-tier product filtering (price min/max, categories, tags, rating, stock status).
   * Fast full-text search with Redis query caching and automated cache invalidation.
   * Instant search suggestions & facet aggregation endpoints.
+  * Admin low-stock inventory alerts (`/inventory/low-stock`) & bulk restock pipeline.
   * Soft delete / hide product visibility controls.
   * Automatic inventory deduction and stock replenishment on cancellation.
 
-* **💖 Customer Wishlist**
-  * Dedicated customer wishlist management.
-  * Seamless one-click migration from wishlist to active shopping cart.
+* **🏠 Customer Address Book & Wishlists**
+  * Multi-shipping address management with default address auto-selection.
+  * Customer wishlist with 1-click migration into active cart.
 
 * **🏷️ Coupons & Promotions Engine**
   * Percentage-based & flat discount coupon validation.
@@ -94,6 +96,8 @@ graph TD
 
 ```text
 ecommerce-express-api/
+├── .github/
+│   └── workflows/ci.yml       # GitHub Actions CI/CD Pipeline
 ├── prisma/
 │   └── schema.prisma          # Prisma ORM schema & entity relations
 ├── docs/
@@ -107,6 +111,8 @@ ecommerce-express-api/
 │   │   ├── Order-Controller.ts
 │   │   ├── Coupon-Controller.ts
 │   │   ├── Wishlist-Controller.ts
+│   │   ├── Address-Controller.ts
+│   │   ├── Inventory-Controller.ts
 │   │   └── Payments-Controller.ts
 │   ├── database/              # Business logic & Prisma data access
 │   ├── errors/                # Standardized custom error classes
@@ -177,12 +183,17 @@ The server will start at `http://localhost:3000` with health check at `http://lo
 | `POST` | `/api/v1/product` | Create product listing | Admin |
 | `PATCH`| `/api/v1/product/:id` | Update product details | Admin |
 | `DELETE`| `/api/v1/product/:id`| Remove product listing | Admin |
+| `GET` | `/api/v1/inventory/low-stock` | Low stock inventory alerts | Admin |
+| `PATCH`| `/api/v1/inventory/restock` | Replenish product inventory | Admin |
 | `GET` | `/api/v1/cart` | View active cart | Auth |
 | `POST` | `/api/v1/cart` | Add item / update quantity | Auth |
 | `DELETE`| `/api/v1/cart/:id` | Remove item from cart | Auth |
 | `GET` | `/api/v1/wishlist` | View saved wishlist items | Auth |
 | `POST` | `/api/v1/wishlist` | Save product to wishlist | Auth |
 | `POST` | `/api/v1/wishlist/:id/move-to-cart` | Transfer wishlist item to cart | Auth |
+| `GET` | `/api/v1/address` | View saved shipping addresses | Auth |
+| `POST` | `/api/v1/address` | Add new address | Auth |
+| `GET` | `/api/v1/address/default` | Get default shipping address | Auth |
 | `GET` | `/api/v1/coupons` | List promo codes & discounts | Public |
 | `POST` | `/api/v1/coupons/apply` | Apply coupon code to cart | Auth |
 | `POST` | `/api/v1/orders` | Place new order from cart | Auth |

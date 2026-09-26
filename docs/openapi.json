@@ -3,7 +3,7 @@
   "info": {
     "title": "NexusCommerce REST API",
     "description": "High-performance, modular enterprise e-commerce backend built with TypeScript, Express, Prisma ORM, Redis caching, and Stripe payments.",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "contact": {
       "name": "NexusCommerce Engineering Team",
       "url": "https://nexuscommerce.io"
@@ -27,7 +27,6 @@
     "/health": {
       "get": {
         "summary": "Service Health Check",
-        "description": "Returns uptime, operational status, and server metadata",
         "responses": {
           "200": { "description": "Server is healthy and operational" }
         }
@@ -36,7 +35,6 @@
     "/health/detailed": {
       "get": {
         "summary": "Detailed System Diagnostics",
-        "description": "Returns database latency, Redis health, and memory metrics",
         "responses": {
           "200": { "description": "Diagnostic telemetry metrics" }
         }
@@ -45,64 +43,22 @@
     "/auth/register": {
       "post": {
         "summary": "Register New User",
-        "description": "Creates a new customer account and sends email verification code",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["username", "email", "password", "firstName", "lastName"],
-                "properties": {
-                  "username": { "type": "string", "example": "johndoe" },
-                  "email": { "type": "string", "format": "email", "example": "john@example.com" },
-                  "password": { "type": "string", "example": "SuperSecret123!" },
-                  "firstName": { "type": "string", "example": "John" },
-                  "lastName": { "type": "string", "example": "Doe" }
-                }
-              }
-            }
-          }
-        },
         "responses": {
-          "201": { "description": "User created successfully" },
-          "400": { "description": "Validation error or user already exists" }
+          "201": { "description": "User created successfully" }
         }
       }
     },
     "/auth/login": {
       "post": {
         "summary": "User Login",
-        "description": "Authenticates user credentials and issues JWT cookies/tokens",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["email", "password"],
-                "properties": {
-                  "email": { "type": "string", "example": "john@example.com" },
-                  "password": { "type": "string", "example": "SuperSecret123!" }
-                }
-              }
-            }
-          }
-        },
         "responses": {
-          "200": { "description": "Authentication successful" },
-          "401": { "description": "Invalid credentials" }
+          "200": { "description": "Authentication successful" }
         }
       }
     },
     "/product": {
       "get": {
         "summary": "Get Paginated Product Catalog",
-        "description": "Fetches products with multi-facet filtering, sorting, and Redis caching",
-        "parameters": [
-          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
-        ],
         "responses": {
           "200": { "description": "Products retrieved successfully" }
         }
@@ -111,9 +67,6 @@
     "/product/search/suggestions": {
       "get": {
         "summary": "Search Autocomplete Suggestions",
-        "parameters": [
-          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } }
-        ],
         "responses": {
           "200": { "description": "Typeahead suggestions list" }
         }
@@ -127,25 +80,11 @@
         }
       }
     },
-    "/product/featured": {
-      "get": {
-        "summary": "Get Featured Products",
-        "responses": {
-          "200": { "description": "Featured products list" }
-        }
-      }
-    },
     "/cart": {
       "get": {
         "summary": "Get User Cart",
         "responses": {
           "200": { "description": "Current cart with item totals and subtotal" }
-        }
-      },
-      "post": {
-        "summary": "Add Item to Cart",
-        "responses": {
-          "200": { "description": "Item added to cart" }
         }
       }
     },
@@ -155,36 +94,43 @@
         "responses": {
           "200": { "description": "User saved wishlist items" }
         }
+      }
+    },
+    "/address": {
+      "get": {
+        "summary": "Get User Address Book",
+        "responses": {
+          "200": { "description": "List of saved shipping addresses" }
+        }
       },
       "post": {
-        "summary": "Add Product to Wishlist",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["productId"],
-                "properties": {
-                  "productId": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
+        "summary": "Add New Address",
         "responses": {
-          "201": { "description": "Product added to wishlist" }
+          "201": { "description": "Address created" }
         }
       }
     },
-    "/wishlist/{productId}/move-to-cart": {
-      "post": {
-        "summary": "Move Wishlist Item to Shopping Cart",
-        "parameters": [
-          { "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
+    "/address/default": {
+      "get": {
+        "summary": "Get Default Shipping Address",
         "responses": {
-          "200": { "description": "Item moved to cart" }
+          "200": { "description": "Default address" }
+        }
+      }
+    },
+    "/inventory/low-stock": {
+      "get": {
+        "summary": "Admin Low Stock Alert",
+        "responses": {
+          "200": { "description": "List of products below stock threshold" }
+        }
+      }
+    },
+    "/inventory/restock": {
+      "patch": {
+        "summary": "Restock Product Inventory",
+        "responses": {
+          "200": { "description": "Product stock replenished" }
         }
       }
     },
@@ -193,14 +139,6 @@
         "summary": "List Available Coupons & Promotions",
         "responses": {
           "200": { "description": "Active promotional coupons" }
-        }
-      }
-    },
-    "/coupons/apply": {
-      "post": {
-        "summary": "Apply Promo Code to Cart",
-        "responses": {
-          "200": { "description": "Coupon applied and discount calculated" }
         }
       }
     },
